@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getTenantConfig } from "../services/tenant.service";
+import { getTenantConfig } from "../services/tenant.service.js";
 
 const router = Router();
 

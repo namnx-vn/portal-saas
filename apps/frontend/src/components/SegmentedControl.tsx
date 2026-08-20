@@ -1,5 +1,3 @@
-import { ToggleButton, ToggleButtonGroup } from "@mui/material";
-
 interface SegmentedControlOption<T extends string> {
   label: string;
   value: T;
@@ -19,27 +17,19 @@ export function SegmentedControl<T extends string>({
   value,
 }: SegmentedControlProps<T>) {
   return (
-    <ToggleButtonGroup
-      exclusive
-      fullWidth
-      aria-label={ariaLabel}
-      className="segmented-control"
-      value={value}
-      onChange={(_, selectedValue: T | null) => {
-        if (selectedValue) {
-          onChange(selectedValue);
-        }
-      }}
-    >
+    <div className="segmented-control" role="tablist" aria-label={ariaLabel}>
       {options.map((option) => (
-        <ToggleButton
-          className="segmented-control__option"
+        <button
           key={option.value}
-          value={option.value}
+          type="button"
+          role="tab"
+          className="segmented-control__option"
+          aria-selected={option.value === value}
+          onClick={() => onChange(option.value)}
         >
           {option.label}
-        </ToggleButton>
+        </button>
       ))}
-    </ToggleButtonGroup>
+    </div>
   );
 }

@@ -5,8 +5,9 @@ import { useApiQuery } from "../hooks/useApi";
 interface User {
   id: string;
   email: string;
-  name: string;
-  roles: string[];
+  tenantId: string;
+  role: string;
+  permissions: string[];
 }
 
 /**
@@ -33,7 +34,7 @@ export function UserDashboard() {
     if (!apiUser) return;
 
     setUser(apiUser);
-    showNotification(`Welcome back, ${apiUser.name}!`, "success");
+    showNotification(`Welcome back, ${apiUser.email}!`, "success");
   }, [apiUser, setUser, showNotification]);
 
   useEffect(() => {
@@ -67,9 +68,9 @@ export function UserDashboard() {
 
   return (
     <div className="dashboard">
-      <h1>Welcome, {displayUser?.name}!</h1>
+      <h1>Welcome, {displayUser?.email}!</h1>
       <p>Email: {displayUser?.email}</p>
-      <p>Roles: {displayUser?.roles.join(", ")}</p>
+      <p>Role: {displayUser?.role}</p>
 
       <button onClick={handleLogout} className="btn btn-danger">
         Logout

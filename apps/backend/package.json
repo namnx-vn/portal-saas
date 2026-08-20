@@ -8,7 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/index.ts",
     "db:seed": "tsx prisma/seed.ts",
-    "test:jit": "tsx src/scripts/test-jit.ts"
+    "test:jit": "tsx src/scripts/test-jit.ts",
+    "test:native-auth": "tsx src/scripts/test-native-auth-flow.ts"
   },
   "keywords": [],
   "author": "",
@@ -16,14 +17,18 @@
   "packageManager": "pnpm@10.34.5",
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.6.2",
     "jsonwebtoken": "^9.0.3",
-    "jwks-rsa": "^4.1.0"
+    "jwks-rsa": "^4.1.0",
+    "resend": "^6.20.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

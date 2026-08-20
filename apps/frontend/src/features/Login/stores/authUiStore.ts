@@ -11,7 +11,7 @@ interface AuthUiState {
 export const useAuthUiStore = create<AuthUiState>()(
   devtools(
     (set) => ({
-      mode: "sign-up",
+      mode: "sign-in",
       setMode: (mode) => set({ mode }),
     }),
     {

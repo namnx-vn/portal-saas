@@ -1,16 +1,14 @@
-import { Button, Box } from "@mui/material";
+import { useMsal } from "@azure/msal-react";
+import Image, { type ImageKey } from "./Image";
+import clsx from "clsx";
 
 type SocialProvider = "apple" | "google" | "microsoft";
 
 interface SocialLoginButtonProps {
   provider: SocialProvider;
+  idpAlias?: string | null;
+  disabled?: boolean;
 }
-
-const providerIcons: Record<SocialProvider, string> = {
-  google: "🔵",
-  apple: "🍎",
-  microsoft: "⊞",
-};
 
 const providerLabels: Record<SocialProvider, string> = {
   google: "Google",
@@ -18,31 +16,36 @@ const providerLabels: Record<SocialProvider, string> = {
   microsoft: "Microsoft",
 };
 
-export function SocialLoginButton({ provider }: SocialLoginButtonProps) {
+export function SocialLoginButton({
+  provider,
+  idpAlias,
+  disabled,
+}: SocialLoginButtonProps) {
+  const { instance } = useMsal();
   const label = providerLabels[provider];
-  const icon = providerIcons[provider];
+
+  const handleClick = () => {
+    // Chỉ Microsoft (Entra External ID) mới có luồng SSO thật trong app này
+    if (provider !== "microsoft") return;
+
+    instance.loginRedirect({
+      scopes: ["openid", "profile", "email"],
+      ...(idpAlias && { extraQueryParameters: { domain_hint: idpAlias } }),
+    });
+  };
 
   return (
-    <Button
+    <button
       type="button"
       aria-label={`Sign in with ${label}`}
-      variant="outlined"
-      fullWidth
-      className="border-gray-300 text-gray-700 hover:border-gray-400"
-      sx={{
-        py: 1.5,
-        px: 2,
-        border: "1px solid #e5e7eb",
-        "&:hover": {
-          border: "1px solid #d1d5db",
-          backgroundColor: "#f9fafb",
-        },
-      }}
+      className={clsx("social-login-button", {
+        "cursor-pointer": !disabled && idpAlias !== null,
+        "cursor-not-allowed": disabled || idpAlias === null,
+      })}
+      onClick={handleClick}
+      disabled={disabled || idpAlias === null}
     >
-      <Box className="flex items-center justify-center gap-2">
-        <span className="text-lg">{icon}</span>
-        <span className="hidden sm:inline text-sm font-medium">{label}</span>
-      </Box>
-    </Button>
+      <Image src={`${provider}_icon` as ImageKey} alt={label} />
+    </button>
   );
 }

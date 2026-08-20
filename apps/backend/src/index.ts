@@ -1,11 +1,17 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { prisma } from "./lib/prisma";
 import { verifyIdToken } from "./lib/jwt";
 import { signPortalSession } from "./lib/session";
 import { resolveSubdomain } from "./lib/tenant";
 import { provisionUser } from "./services/auth.service";
+import { getPermissionsForRole } from "./lib/permissions";
+import { toSafeUser } from "./lib/user";
+import { requireSession } from "./lib/requireSession";
 import tenantConfigRouter from "./routes/tenant-config.routes";
+import adminUsersRouter from "./routes/admin-users.routes";
+import authRouter from "./routes/auth.routes";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -15,10 +21,13 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 app.use(tenantConfigRouter);
+app.use(adminUsersRouter);
+app.use(authRouter);
 
 app.post("/session/callback", async (req, res) => {
   const { idToken } = req.body;
@@ -51,7 +60,26 @@ app.post("/session/callback", async (req, res) => {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
   });
-  res.json({ ok: true });
+  res.json({
+    user: toSafeUser(user),
+    role: user.role,
+    permissions: getPermissionsForRole(user.role),
+  });
+});
+
+app.get("/me", requireSession, async (req, res) => {
+  const session = req.portalSession!;
+  const user = await prisma.user.findUnique({ where: { id: session.userId } });
+
+  if (!user || user.tenantId !== session.tenantId) {
+    return res.status(401).json({ error: "Session invalid" });
+  }
+
+  res.json({
+    user: toSafeUser(user),
+    role: user.role,
+    permissions: getPermissionsForRole(user.role),
+  });
 });
 
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));

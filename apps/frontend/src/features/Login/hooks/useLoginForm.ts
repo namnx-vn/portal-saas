@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useApiMutation } from "../../../hooks/useApi";
-import { useAuthStore } from "../../../stores";
-import { useUIStore } from "../../../stores";
-import { validationRules } from "../../../hooks/useFormHandler";
 import type { SubmitHandler } from "react-hook-form";
+import { useApiMutation } from "../../../hooks/useApi";
+import { useUserStore, useUIStore } from "../../../stores";
+import apiClient from "../../../lib/axios";
+
+const TENANT_SUBDOMAIN = "acme"; // demo — khớp cách hardcode hiện có ở useAuthRedirectHandler.ts
 
 export interface LoginFormValues {
   email: string;
@@ -13,59 +14,70 @@ export interface LoginFormValues {
 }
 
 interface LoginApiResponse {
-  token: string;
-  refreshToken: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
+  user: { id: string; email: string; tenantId: string };
+  role: string;
+  permissions: string[];
+}
+
+interface MfaRequiredResponse {
+  mfaRequired: true;
+  preAuthToken: string;
 }
 
 export function useLoginForm() {
   const form = useForm<LoginFormValues>({
     mode: "onBlur",
-    defaultValues: {
-      email: "",
-      password: "",
-      name: "",
-    },
+    defaultValues: { email: "", password: "", name: "" },
   });
 
   const email = form.watch("email");
   const password = form.watch("password");
 
-  const { setAuth } = useAuthStore();
+  const setUser = useUserStore((state) => state.setUser);
   const { showNotification } = useUIStore();
 
-  // Login mutation
-  const loginMutation = useApiMutation<LoginApiResponse, LoginFormValues>({
+  const [mfaStage, setMfaStage] = useState<{ preAuthToken: string } | null>(null);
+
+  const applySession = (data: LoginApiResponse) => {
+    setUser({ ...data.user, role: data.role, permissions: data.permissions });
+    showNotification("Đăng nhập thành công!", "success");
+    form.reset();
+    setMfaStage(null);
+  };
+
+  const loginMutation = useApiMutation<LoginApiResponse | MfaRequiredResponse, LoginFormValues>({
     mutationFn: async (data) => {
-      // Replace with your actual login API endpoint
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({
-            token: "mock-token-" + Date.now(),
-            refreshToken: "mock-refresh-token",
-            user: {
-              id: "user-123",
-              email: data.email,
-              name: data.name || data.email.split("@")[0],
-            },
-          });
-        }, 1000);
-      });
+      const response = await apiClient.post<LoginApiResponse | MfaRequiredResponse>(
+        "/auth/login",
+        { email: data.email, password: data.password },
+        { headers: { "x-tenant-subdomain": TENANT_SUBDOMAIN } },
+      );
+      return response.data;
     },
     onSuccess: (data) => {
-      setAuth(data.token, data.refreshToken, 3600);
-      showNotification("Login successful!", "success");
-      form.reset();
+      if ("mfaRequired" in data) {
+        setMfaStage({ preAuthToken: data.preAuthToken });
+        return;
+      }
+      applySession(data);
     },
     onError: (error: any) => {
-      showNotification(
-        error?.message || "Login failed. Please try again.",
-        "error"
-      );
+      showNotification(error?.response?.data?.error || "Đăng nhập thất bại. Vui lòng thử lại.", "error");
+    },
+  });
+
+  const verifyOtpMutation = useApiMutation<LoginApiResponse, { otp: string }>({
+    mutationFn: async ({ otp }) => {
+      if (!mfaStage) throw new Error("Missing MFA session");
+      const response = await apiClient.post<LoginApiResponse>("/auth/mfa/verify", {
+        preAuthToken: mfaStage.preAuthToken,
+        otp,
+      });
+      return response.data;
+    },
+    onSuccess: applySession,
+    onError: (error: any) => {
+      showNotification(error?.response?.data?.error || "Xác thực OTP thất bại.", "error");
     },
   });
 
@@ -87,10 +99,9 @@ export function useLoginForm() {
     loginMutation.mutate(data);
   };
 
-  return {
-    form,
-    passwordRules,
-    loginMutation,
-    onSubmit,
+  const onVerifyOtp = (otp: string) => {
+    verifyOtpMutation.mutate({ otp });
   };
+
+  return { form, passwordRules, loginMutation, verifyOtpMutation, mfaStage, onSubmit, onVerifyOtp };
 }

@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma";
+import { prisma } from "../lib/prisma.js";
 
 export async function getTenantConfig(subdomain: string) {
   const tenant = await prisma.tenant.findUnique({
@@ -13,5 +13,6 @@ export async function getTenantConfig(subdomain: string) {
     local_login_enabled: tenant.idpConfig.localLoginEnabled,
     mfa_required: tenant.idpConfig.mfaRequired,
     idp_alias: tenant.idpConfig.idpAlias,
+    auth_mode: tenant.idpConfig.authMode,
   };
 }

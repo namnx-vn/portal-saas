@@ -1,77 +1,80 @@
-import { Box, Container, Paper } from "@mui/material";
+import { Box, CircularProgress, Container, Paper } from "@mui/material";
+import { useTenantConfig } from "../../hooks/useTenantConfig";
+import { useUserStore } from "../../stores";
 import { BrandMark } from "./components/BrandMark";
 import { LoginForm } from "./components/LoginForm";
 import { LoginHero } from "./components/LoginHero";
+import { MfaOtpForm } from "./components/MfaOtpForm";
 import { useLoginForm } from "./hooks/useLoginForm";
-import { useAuthUiStore } from "./stores/authUiStore";
-import { useAuthStore } from "../../stores";
 import "./LoginScreen.scss";
 
-export function LoginScreen() {
-  const { form, passwordRules, loginMutation, onSubmit } = useLoginForm();
-  const mode = useAuthUiStore((state) => state.mode);
-  const setMode = useAuthUiStore((state) => state.setMode);
-  const { isAuthenticated } = useAuthStore();
+const TENANT_SUBDOMAIN = "native";
 
-  // Redirect if already authenticated
-  if (isAuthenticated) {
+export function LoginScreen() {
+  const { config, loading: configLoading } = useTenantConfig(TENANT_SUBDOMAIN);
+  const {
+    form,
+    loginMutation,
+    mfaStage,
+    verifyOtpMutation,
+    onSubmit,
+    onVerifyOtp,
+  } = useLoginForm();
+  const user = useUserStore((state) => state.user);
+
+  if (user) {
     return (
       <Box className="flex items-center justify-center min-h-screen">
-        <p>Redirecting...</p>
+        <p>Đã đăng nhập với vai trò {user.role}.</p>
       </Box>
     );
   }
 
   return (
-    <Box className="flex min-h-screen bg-linear-to-br from-blue-50 to-indigo-50">
-      {/* Left Side - Hero Section */}
-      <Box className="hidden lg:flex lg:w-1/2 lg:flex-col">
+    <Box className="flex min-h-screen">
+      <Box className="h-[calc(100vh-4rem)] hidden lg:flex lg:w-1/2 lg:flex-col m-8">
         <LoginHero />
       </Box>
 
-      {/* Right Side - Login Panel */}
       <Box className="w-full lg:w-1/2 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-11">
         <Container maxWidth="sm">
-          <Paper
-            elevation={0}
-            className="p-8 sm:p-10 rounded-2xl border border-gray-200 shadow-sm"
-          >
-            {/* Brand Mark */}
+          <Paper elevation={0} className="p-8 sm:p-10">
             <Box className="mb-8 flex justify-center">
               <BrandMark />
             </Box>
 
-            {/* Login Form */}
-            <LoginForm
-              form={form}
-              mode={mode}
-              passwordRules={passwordRules}
-              onModeChange={setMode}
-              onSubmit={onSubmit}
-              isSubmitting={loginMutation.isPending}
-              error={
-                loginMutation.error?.message ||
-                (loginMutation.isError
-                  ? "An error occurred. Please try again."
-                  : null)
-              }
-            />
-          </Paper>
+            {configLoading && (
+              <Box className="flex justify-center py-8">
+                <CircularProgress />
+              </Box>
+            )}
 
-          {/* Footer */}
-          <Box className="mt-8 text-center text-xs text-gray-600">
-            <p>
-              By signing up I accept Company's
-              <br />
-              <a href="/terms" className="text-blue-600 hover:underline">
-                Terms of Use
-              </a>{" "}
-              &amp;{" "}
-              <a href="/privacy" className="text-blue-600 hover:underline">
-                Privacy Policy
-              </a>
-            </p>
-          </Box>
+            {!configLoading && mfaStage && (
+              <MfaOtpForm
+                onSubmit={onVerifyOtp}
+                isSubmitting={verifyOtpMutation.isPending}
+                error={
+                  verifyOtpMutation.isError
+                    ? "Mã OTP không đúng hoặc đã hết hạn."
+                    : null
+                }
+              />
+            )}
+
+            {!configLoading && !mfaStage && (
+              <LoginForm
+                form={form}
+                idpAlias={config?.idp_alias}
+                onSubmit={onSubmit}
+                isSubmitting={loginMutation.isPending}
+                error={
+                  loginMutation.isError
+                    ? "Email hoặc mật khẩu không đúng."
+                    : null
+                }
+              />
+            )}
+          </Paper>
         </Container>
       </Box>
     </Box>

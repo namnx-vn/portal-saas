@@ -1,182 +1,88 @@
-import { FormProvider } from "react-hook-form";
-import type { UseFormReturn, SubmitHandler } from "react-hook-form";
-import {
-  Box,
-  Button,
-  Stack,
-  Link,
-  Divider,
-  CircularProgress,
-  Alert,
-} from "@mui/material";
-import { ControlledTextField } from "../../../components/ControlledForm";
-import { SegmentedControl } from "../../../components/SegmentedControl";
+import type { SubmitHandler, UseFormReturn } from "react-hook-form";
+import { Controller, FormProvider } from "react-hook-form";
 import { SocialLoginButton } from "../../../components/SocialLoginButton";
+import { TextField } from "../../../components/TextField";
 import type { LoginFormValues } from "../hooks/useLoginForm";
-import type { LoginMode } from "../stores/authUiStore";
 
 interface LoginFormProps {
   form: UseFormReturn<LoginFormValues>;
-  mode: LoginMode;
-  onModeChange: (value: LoginMode) => void;
-  passwordRules: Array<{ id: string; label: string; met: boolean }>;
+  passwordRules?: Array<{ id: string; label: string; met: boolean }>;
   onSubmit: SubmitHandler<LoginFormValues>;
   isSubmitting?: boolean;
   error?: string | null;
+  idpAlias?: string | null;
 }
 
 export function LoginForm({
   form,
-  mode,
-  onModeChange,
-  passwordRules,
   onSubmit,
   isSubmitting = false,
   error,
+  idpAlias,
 }: LoginFormProps) {
   return (
     <FormProvider {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full max-w-md space-y-6"
-      >
-        {/* Mode Toggle */}
-        <SegmentedControl
-          ariaLabel="Authentication mode"
-          options={[
-            { label: "Sign Up", value: "sign-up" },
-            { label: "Sign In", value: "sign-in" },
-          ]}
-          value={mode}
-          onChange={onModeChange}
-        />
-
-        {/* Error Alert */}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="login-form">
         {error && (
-          <Alert severity="error" className="text-sm">
+          <p className="login-panel__status login-panel__status--error">
             {error}
-          </Alert>
+          </p>
         )}
 
-        {/* Form Fields */}
-        <Stack spacing={3}>
-          {/* Name field - only for sign up */}
-          {mode === "sign-up" && (
-            <ControlledTextField
-              control={form.control}
-              name="name"
-              label="Full Name"
-              placeholder="Enter your full name"
-              fullWidth
+        <Controller
+          control={form.control}
+          name="email"
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              label="Email Id"
+              type="email"
+              placeholder="you@example.com"
+              autoComplete="email"
               disabled={isSubmitting}
+              error={fieldState.error?.message}
             />
           )}
+        />
 
-          {/* Email field */}
-          <ControlledTextField
-            control={form.control}
-            name="email"
-            label="Email Id"
-            type="email"
-            placeholder="you@example.com"
-            autoComplete="email"
-            fullWidth
-            disabled={isSubmitting}
-          />
-
-          {/* Password field */}
-          <Box>
-            <ControlledTextField
-              control={form.control}
-              name="password"
+        <Controller
+          control={form.control}
+          name="password"
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
               label="Password"
               type="password"
-              placeholder="Enter your password"
-              autoComplete={
-                mode === "sign-up" ? "new-password" : "current-password"
-              }
-              fullWidth
+              placeholder="Enter Password"
+              autoComplete={"current-password"}
               disabled={isSubmitting}
+              error={fieldState.error?.message}
             />
-
-            {/* Forgot Password Link - only for sign in */}
-            {mode === "sign-in" && (
-              <Link
-                href="/forgot-password"
-                className="mt-2 text-xs inline-block"
-                underline="hover"
-              >
-                Forgot Password?
-              </Link>
-            )}
-          </Box>
-
-          {/* Password Rules - only for sign up */}
-          {mode === "sign-up" && (
-            <Box className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-xs font-semibold text-gray-700 mb-2">
-                Password Requirements:
-              </p>
-              <ul className="space-y-1">
-                {passwordRules.map((rule) => (
-                  <li
-                    key={rule.id}
-                    className={`text-xs flex items-center gap-2 ${
-                      rule.met ? "text-green-600" : "text-gray-500"
-                    }`}
-                  >
-                    <span className={rule.met ? "text-green-500" : "text-gray-300"}>
-                      ✓
-                    </span>
-                    {rule.label}
-                  </li>
-                ))}
-              </ul>
-            </Box>
           )}
-        </Stack>
+        />
 
-        {/* Submit Button */}
-        <Button
+        <a href="/forgot-password">Forgot Password?</a>
+
+        <button
           type="submit"
-          fullWidth
-          size="large"
-          variant="contained"
+          className="login-form__submit"
           disabled={!form.formState.isValid || isSubmitting}
-          className="mt-6"
         >
-          {isSubmitting ? (
-            <Box className="flex items-center gap-2">
-              <CircularProgress size={20} />
-              Processing...
-            </Box>
-          ) : mode === "sign-up" ? (
-            "Create Account"
-          ) : (
-            "Sign In"
-          )}
-        </Button>
+          Sign In
+        </button>
 
-        {/* Divider */}
-        <Divider className="my-6">or</Divider>
+        <div className="login-form__divider">OR</div>
 
-        {/* Social Login Buttons */}
-        <Box className="grid grid-cols-3 gap-3">
-          <SocialLoginButton provider="google" />
-          <SocialLoginButton provider="apple" />
-          <SocialLoginButton provider="microsoft" />
-        </Box>
+        <div className="login-form__socials">
+          <SocialLoginButton provider="google" disabled />
+          <SocialLoginButton provider="apple" disabled />
+          <SocialLoginButton provider="microsoft" idpAlias={idpAlias} />
+        </div>
 
-        {/* Terms Link */}
-        <p className="text-xs text-center text-gray-600 mt-4">
-          By signing up I accept{" "}
-          <Link href="/terms" underline="hover" className="text-xs">
-            Terms of Use
-          </Link>{" "}
-          &amp;{" "}
-          <Link href="/privacy" underline="hover" className="text-xs">
-            Privacy Policy
-          </Link>
+        <p className="login-panel__terms">
+          By signing up to create an account I accept Company's{" "}
+          <a href="/terms">Terms of use</a> &amp;{" "}
+          <a href="/privacy">Privacy Policy</a>.
         </p>
       </form>
     </FormProvider>

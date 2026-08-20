@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMsal } from "@azure/msal-react";
 
-export function useAuthRedirectHandler() {
+export function useAuthRedirectHandler(tenantSubdomain: string) {
   const { instance } = useMsal();
   const [status, setStatus] = useState<"idle" | "processing" | "done" | "error">("idle");
 
@@ -16,7 +16,7 @@ export function useAuthRedirectHandler() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-tenant-subdomain": "acme",
+            "x-tenant-subdomain": tenantSubdomain,
           },
           credentials: "include",
           body: JSON.stringify({ idToken: result.idToken }),
@@ -28,7 +28,7 @@ export function useAuthRedirectHandler() {
         console.error("Redirect handling error:", err);
         setStatus("error");
       });
-  }, [instance]);
+  }, [instance, tenantSubdomain]);
 
   return status;
 }

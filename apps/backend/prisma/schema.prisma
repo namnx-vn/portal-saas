@@ -26,6 +26,7 @@ model TenantIdpConfig {
   idpAlias          String? @map("idp_alias")
   mfaRequired       Boolean @default(false) @map("mfa_required")
   localLoginEnabled Boolean @default(true) @map("local_login_enabled")
+  authMode          String  @default("entra") @map("auth_mode") // "entra" | "native"
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
@@ -35,15 +36,22 @@ model TenantIdpConfig {
 model User {
   id               String    @id @default(uuid())
   tenantId         String    @map("tenant_id")
-  externalObjectId String    @map("external_object_id")
+  externalObjectId String?   @map("external_object_id") // null cho user native
   email            String
   lastLoginAt      DateTime? @map("last_login_at")
   createdAt        DateTime  @default(now()) @map("created_at")
+  role             String    @default("member") @map("role") // "admin" | "member"
+  passwordHash     String?   @map("password_hash") // null tới khi user tự đặt
+  inviteTokenHash  String?   @unique @map("invite_token_hash")
+  inviteExpiresAt  DateTime? @map("invite_expires_at")
+  mfaOtpHash       String?   @map("mfa_otp_hash") // OTP cho native login khi mfa_required
+  mfaOtpExpiresAt  DateTime? @map("mfa_otp_expires_at")
 
   tenant    Tenant          @relation(fields: [tenantId], references: [id])
   auditLogs LoginAuditLog[]
 
   @@unique([tenantId, externalObjectId])
+  @@unique([tenantId, email]) // lookup native login + siết BR-05
   @@map("users")
 }
 

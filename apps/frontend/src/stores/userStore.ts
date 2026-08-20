@@ -4,9 +4,9 @@ import { devtools } from "zustand/middleware";
 interface User {
   id: string;
   email: string;
-  name: string;
-  roles: string[];
-  avatar?: string;
+  tenantId: string;
+  role: string;
+  permissions: string[];
 }
 
 interface UserState {
@@ -25,17 +25,11 @@ export const useUserStore = create<UserState>()(
       user: null,
       loading: false,
       error: null,
-
       setUser: (user: User) => set({ user, error: null }),
-
       clearUser: () => set({ user: null }),
-
       setLoading: (loading: boolean) => set({ loading }),
-
       setError: (error: string | null) => set({ error }),
     }),
-    {
-      name: "UserStore",
-    }
-  )
+    { name: "UserStore" },
+  ),
 );

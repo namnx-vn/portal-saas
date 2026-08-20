@@ -6,6 +6,7 @@ interface TenantConfig {
   local_login_enabled: boolean;
   mfa_required: boolean;
   idp_alias: string | null;
+  auth_mode: "entra" | "native"
 }
 
 export function useTenantConfig(subdomain: string) {
@@ -25,5 +26,6 @@ export function useTenantConfig(subdomain: string) {
     config: tenantConfigQuery.data ?? null,
     error: tenantConfigQuery.error,
     loading: tenantConfigQuery.isLoading,
+    
   };
 }
