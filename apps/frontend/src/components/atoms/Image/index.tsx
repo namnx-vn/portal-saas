@@ -1,5 +1,5 @@
 import type { ImgHTMLAttributes } from "react";
-import * as imgs from "../../assets";
+import * as imgs from "../../../assets";
 
 export type ImageKey = keyof typeof imgs;
 

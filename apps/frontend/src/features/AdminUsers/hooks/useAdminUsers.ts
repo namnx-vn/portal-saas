@@ -11,6 +11,7 @@ export interface AdminUser {
   status: "active" | "pending";
   createdAt: string;
   lastLoginAt: string | null;
+  departmentRole: { id: string; name: string } | null;
 }
 
 interface CreateUserValues {
@@ -25,7 +26,9 @@ export function useAdminUsersList() {
 }
 
 export function useCreateUserForm() {
-  const form = useForm<CreateUserValues>({ defaultValues: { email: "", role: "member" } });
+  const form = useForm<CreateUserValues>({
+    defaultValues: { email: "", role: "member" },
+  });
 
   const createMutation = useApiMutation<{ id: string }, CreateUserValues>({
     mutationFn: async (data) => {
@@ -38,7 +41,38 @@ export function useCreateUserForm() {
     },
   });
 
-  const onSubmit: SubmitHandler<CreateUserValues> = (data) => createMutation.mutate(data);
+  const onSubmit: SubmitHandler<CreateUserValues> = (data) =>
+    createMutation.mutate(data);
 
   return { form, createMutation, onSubmit };
+}
+
+export function useAssignDepartmentRole() {
+  return useApiMutation<
+    AdminUser,
+    { id: string; departmentRoleId: string | null }
+  >({
+    mutationFn: async ({ id, departmentRoleId }) =>
+      (await apiClient.patch(`${ADMIN_USERS_URL}/${id}`, { departmentRoleId }))
+        .data,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: [ADMIN_USERS_URL] }),
+  });
+}
+
+export function useChangeUserRole() {
+  return useApiMutation<
+    { id: string; role: string },
+    { id: string; role: "admin" | "member" }
+  >({
+    mutationFn: async ({ id, role }) => {
+      const response = await apiClient.patch(`${ADMIN_USERS_URL}/${id}`, {
+        role,
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [ADMIN_USERS_URL] });
+    },
+  });
 }

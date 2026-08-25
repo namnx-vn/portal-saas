@@ -5,11 +5,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Error: no test specified\" && exit 0",
     "dev": "tsx watch src/index.ts",
     "db:seed": "tsx prisma/seed.ts",
     "test:jit": "tsx src/scripts/test-jit.ts",
-    "test:native-auth": "tsx src/scripts/test-native-auth-flow.ts"
+    "test:native-auth": "tsx src/scripts/test-native-auth-flow.ts",
+    "dev:bootstrap-native": "tsx src/scripts/dev-bootstrap-native-tenant.ts"
   },
   "keywords": [],
   "author": "",

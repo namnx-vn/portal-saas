@@ -6,12 +6,13 @@ import { verifyIdToken } from "./lib/jwt";
 import { signPortalSession } from "./lib/session";
 import { resolveSubdomain } from "./lib/tenant";
 import { provisionUser } from "./services/auth.service";
-import { getPermissionsForRole } from "./lib/permissions";
+import { resolvePermissions } from "./lib/permissions.js";
 import { toSafeUser } from "./lib/user";
 import { requireSession } from "./lib/requireSession";
 import tenantConfigRouter from "./routes/tenant-config.routes";
 import adminUsersRouter from "./routes/admin-users.routes";
 import authRouter from "./routes/auth.routes";
+import adminRolesRouter from "./routes/admin-roles.routes";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -28,6 +29,7 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use(tenantConfigRouter);
 app.use(adminUsersRouter);
 app.use(authRouter);
+app.use(adminRolesRouter);
 
 app.post("/session/callback", async (req, res) => {
   const { idToken } = req.body;
@@ -63,7 +65,7 @@ app.post("/session/callback", async (req, res) => {
   res.json({
     user: toSafeUser(user),
     role: user.role,
-    permissions: getPermissionsForRole(user.role),
+    permissions: resolvePermissions(user),
   });
 });
 
@@ -78,7 +80,7 @@ app.get("/me", requireSession, async (req, res) => {
   res.json({
     user: toSafeUser(user),
     role: user.role,
-    permissions: getPermissionsForRole(user.role),
+    permissions: resolvePermissions(user),
   });
 });
 

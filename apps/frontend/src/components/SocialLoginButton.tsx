@@ -1,5 +1,4 @@
-import { useMsal } from "@azure/msal-react";
-import Image, { type ImageKey } from "./Image";
+import Image, { type ImageKey } from "./atoms/Image";
 import clsx from "clsx";
 
 type SocialProvider = "apple" | "google" | "microsoft";
@@ -8,6 +7,7 @@ interface SocialLoginButtonProps {
   provider: SocialProvider;
   idpAlias?: string | null;
   disabled?: boolean;
+  onClick?: () => void;
 }
 
 const providerLabels: Record<SocialProvider, string> = {
@@ -19,20 +19,10 @@ const providerLabels: Record<SocialProvider, string> = {
 export function SocialLoginButton({
   provider,
   idpAlias,
+  onClick,
   disabled,
 }: SocialLoginButtonProps) {
-  const { instance } = useMsal();
   const label = providerLabels[provider];
-
-  const handleClick = () => {
-    // Chỉ Microsoft (Entra External ID) mới có luồng SSO thật trong app này
-    if (provider !== "microsoft") return;
-
-    instance.loginRedirect({
-      scopes: ["openid", "profile", "email"],
-      ...(idpAlias && { extraQueryParameters: { domain_hint: idpAlias } }),
-    });
-  };
 
   return (
     <button
@@ -42,7 +32,7 @@ export function SocialLoginButton({
         "cursor-pointer": !disabled && idpAlias !== null,
         "cursor-not-allowed": disabled || idpAlias === null,
       })}
-      onClick={handleClick}
+      onClick={onClick}
       disabled={disabled || idpAlias === null}
     >
       <Image src={`${provider}_icon` as ImageKey} alt={label} />

@@ -13,8 +13,10 @@ model Tenant {
   subdomain String   @unique
   createdAt DateTime @default(now()) @map("created_at")
 
-  idpConfig TenantIdpConfig?
-  users     User[]
+  idpConfig       TenantIdpConfig?
+  users           User[]
+  departments     Department[]
+  departmentRoles DepartmentRole[]
 
   @@map("tenants")
 }
@@ -46,9 +48,11 @@ model User {
   inviteExpiresAt  DateTime? @map("invite_expires_at")
   mfaOtpHash       String?   @map("mfa_otp_hash") // OTP cho native login khi mfa_required
   mfaOtpExpiresAt  DateTime? @map("mfa_otp_expires_at")
+  departmentRoleId String?   @map("department_role_id")
 
-  tenant    Tenant          @relation(fields: [tenantId], references: [id])
-  auditLogs LoginAuditLog[]
+  tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  auditLogs      LoginAuditLog[]
+  departmentRole DepartmentRole? @relation(fields: [departmentRoleId], references: [id])
 
   @@unique([tenantId, externalObjectId])
   @@unique([tenantId, email]) // lookup native login + siết BR-05
@@ -66,4 +70,33 @@ model LoginAuditLog {
   user User @relation(fields: [userId], references: [id])
 
   @@map("login_audit_log")
+}
+
+model Department {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant           @relation(fields: [tenantId], references: [id])
+  roles  DepartmentRole[]
+
+  @@unique([tenantId, name])
+  @@map("departments")
+}
+
+model DepartmentRole {
+  id           String   @id @default(uuid())
+  tenantId     String   @map("tenant_id")
+  departmentId String   @map("department_id")
+  name         String
+  permissions  String[] @default([]) @map("permissions")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id])
+  department Department @relation(fields: [departmentId], references: [id])
+  users      User[]
+
+  @@unique([tenantId, departmentId, name])
+  @@map("department_roles")
 }

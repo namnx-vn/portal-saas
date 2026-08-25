@@ -32,7 +32,9 @@ router.post("/admin/users", requireSession, requireAdmin, async (req, res) => {
   }
 
   const { rawToken, tokenHash } = generateInviteToken();
-  const inviteExpiresAt = new Date(Date.now() + INVITE_TOKEN_TTL_HOURS * 60 * 60 * 1000);
+  const inviteExpiresAt = new Date(
+    Date.now() + INVITE_TOKEN_TTL_HOURS * 60 * 60 * 1000,
+  );
 
   let user;
   try {
@@ -48,7 +50,9 @@ router.post("/admin/users", requireSession, requireAdmin, async (req, res) => {
     });
   } catch (err: any) {
     if (err?.code === "P2002") {
-      return res.status(409).json({ error: "User already exists for this tenant" });
+      return res
+        .status(409)
+        .json({ error: "User already exists for this tenant" });
     }
     throw err;
   }
@@ -69,6 +73,7 @@ router.get("/admin/users", requireSession, requireAdmin, async (req, res) => {
   const users = await prisma.user.findMany({
     where: { tenantId },
     orderBy: { createdAt: "desc" },
+    include: { departmentRole: true },
   });
 
   res.json(
@@ -79,8 +84,79 @@ router.get("/admin/users", requireSession, requireAdmin, async (req, res) => {
       status: u.passwordHash ? "active" : "pending",
       createdAt: u.createdAt,
       lastLoginAt: u.lastLoginAt,
+      departmentRole: u.departmentRole
+        ? { id: u.departmentRole.id, name: u.departmentRole.name }
+        : null,
     })),
   );
 });
+
+router.patch(
+  "/admin/users/:id",
+  requireSession,
+  requireAdmin,
+  async (req, res) => {
+    const { id } = req.params;
+    const { role, departmentRoleId } = req.body ?? {};
+
+    if (role !== undefined && !ALLOWED_ROLES.includes(role)) {
+      return res.status(400).json({ error: "Invalid role" });
+    }
+
+    const caller = req.adminUser!;
+    const target = await prisma.user.findUnique({ where: { id } });
+    if (!target || target.tenantId !== caller.tenantId) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (role === "member" && target.id === caller.id) {
+      const adminCount = await prisma.user.count({
+        where: { tenantId: caller.tenantId, role: "admin" },
+      });
+      if (adminCount <= 1) {
+        return res
+          .status(409)
+          .json({ error: "Cannot demote the last admin of this tenant" });
+      }
+    }
+
+    if (departmentRoleId !== undefined && departmentRoleId !== null) {
+      // 🔒 role phải cùng tenant — không nhận departmentRoleId của tenant khác
+      const roleRecord = await prisma.departmentRole.findUnique({
+        where: { id: departmentRoleId },
+      });
+      if (!roleRecord || roleRecord.tenantId !== caller.tenantId) {
+        return res.status(400).json({ error: "Invalid departmentRoleId" });
+      }
+    }
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: {
+        ...(role !== undefined && { role }),
+        ...(departmentRoleId !== undefined && { departmentRoleId }),
+      },
+      include: { departmentRole: true },
+    });
+
+    await prisma.loginAuditLog.create({
+      data: {
+        userId: updated.id,
+        tenantId: updated.tenantId,
+        eventType: "role_changed",
+        ipAddress: req.ip,
+      },
+    });
+
+    res.json({
+      id: updated.id,
+      email: updated.email,
+      role: updated.role,
+      departmentRole: updated.departmentRole
+        ? { id: updated.departmentRole.id, name: updated.departmentRole.name }
+        : null,
+    });
+  },
+);
 
 export default router;

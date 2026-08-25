@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useMsal } from "@azure/msal-react";
+import { useAuthStore } from "../stores";
 
-export function useAuthRedirectHandler(tenantSubdomain: string) {
+export function useAuthRedirectHandler() {
   const { instance } = useMsal();
   const [status, setStatus] = useState<"idle" | "processing" | "done" | "error">("idle");
 
@@ -16,19 +17,27 @@ export function useAuthRedirectHandler(tenantSubdomain: string) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-tenant-subdomain": tenantSubdomain,
+            "x-tenant-subdomain": "acme",
           },
           credentials: "include",
           body: JSON.stringify({ idToken: result.idToken }),
         });
 
-        setStatus(res.ok ? "done" : "error");
+        if (res.ok) {
+          // portal_session cookie is now set by the backend response.
+          // Flip isAuthenticated so LoginScreen's <Navigate to="/dashboard" />
+          // check fires and the user lands on the dashboard automatically.
+          useAuthStore.getState().setAuthenticated(true);
+          setStatus("done");
+        } else {
+          setStatus("error");
+        }
       })
       .catch((err) => {
         console.error("Redirect handling error:", err);
         setStatus("error");
       });
-  }, [instance, tenantSubdomain]);
+  }, [instance]);
 
   return status;
 }

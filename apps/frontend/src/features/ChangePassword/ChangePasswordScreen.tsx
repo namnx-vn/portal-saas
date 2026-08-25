@@ -1,13 +1,29 @@
-import { useSearchParams } from "react-router-dom";
-import { Box, Container, Paper, Alert, Button, TextField, CircularProgress, Typography } from "@mui/material";
+import { Navigate, useSearchParams } from "react-router-dom";
+import {
+  Box,
+  Container,
+  Paper,
+  Alert,
+  Button,
+  TextField,
+  CircularProgress,
+  Typography,
+} from "@mui/material";
 import { useChangePasswordForm } from "./hooks/useChangePasswordForm";
 import { useUserStore } from "../../stores";
 
 export function ChangePasswordScreen() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
-  const { form, acceptMutation, isExpired, resendMutation, resendStatus, onSubmit, onResend } =
-    useChangePasswordForm(token);
+  const {
+    form,
+    acceptMutation,
+    isExpired,
+    resendMutation,
+    resendStatus,
+    onSubmit,
+    onResend,
+  } = useChangePasswordForm(token);
   const user = useUserStore((state) => state.user);
 
   if (!token) {
@@ -18,18 +34,17 @@ export function ChangePasswordScreen() {
     );
   }
 
-  if (user) {
-    return (
-      <Box className="flex items-center justify-center min-h-screen">
-        <p>Đặt mật khẩu thành công. Bạn đã đăng nhập.</p>
-      </Box>
-    );
-  }
+  // if (user) {
+  //   return <Navigate to="/" replace />;
+  // }
 
   return (
     <Box className="flex items-center justify-center min-h-screen p-4">
       <Container maxWidth="xs">
-        <Paper elevation={0} className="p-8 rounded-2xl border border-gray-200 shadow-sm">
+        <Paper
+          elevation={0}
+          className="p-8 rounded-2xl border border-gray-200 shadow-sm"
+        >
           <Typography variant="h6" className="mb-6 text-center">
             Đặt mật khẩu để kích hoạt tài khoản
           </Typography>
@@ -38,10 +53,21 @@ export function ChangePasswordScreen() {
             <Box className="space-y-4">
               <Alert severity="warning">Đường dẫn mời đã hết hạn.</Alert>
               {resendStatus === "sent" ? (
-                <Alert severity="success">Đã gửi lại email mời. Vui lòng kiểm tra hộp thư.</Alert>
+                <Alert severity="success">
+                  Đã gửi lại email mời. Vui lòng kiểm tra hộp thư.
+                </Alert>
               ) : (
-                <Button fullWidth variant="contained" onClick={onResend} disabled={resendMutation.isPending}>
-                  {resendMutation.isPending ? <CircularProgress size={20} /> : "Gửi lại lời mời"}
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={onResend}
+                  disabled={resendMutation.isPending}
+                >
+                  {resendMutation.isPending ? (
+                    <CircularProgress size={20} />
+                  ) : (
+                    "Gửi lại lời mời"
+                  )}
                 </Button>
               )}
             </Box>
@@ -49,7 +75,8 @@ export function ChangePasswordScreen() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {acceptMutation.isError && (
                 <Alert severity="error">
-                  {(acceptMutation.error as any)?.response?.data?.error || "Có lỗi xảy ra."}
+                  {(acceptMutation.error as any)?.response?.data?.error ||
+                    "Có lỗi xảy ra."}
                 </Alert>
               )}
 
@@ -66,8 +93,18 @@ export function ChangePasswordScreen() {
                 helperText={form.formState.errors.password?.message}
               />
 
-              <Button type="submit" fullWidth size="large" variant="contained" disabled={acceptMutation.isPending}>
-                {acceptMutation.isPending ? <CircularProgress size={20} /> : "Kích hoạt tài khoản"}
+              <Button
+                type="submit"
+                fullWidth
+                size="large"
+                variant="contained"
+                disabled={acceptMutation.isPending}
+              >
+                {acceptMutation.isPending ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  "Kích hoạt tài khoản"
+                )}
               </Button>
             </form>
           )}

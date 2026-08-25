@@ -1,8 +1,10 @@
 import type { SubmitHandler, UseFormReturn } from "react-hook-form";
 import { Controller, FormProvider } from "react-hook-form";
 import { SocialLoginButton } from "../../../components/SocialLoginButton";
-import { TextField } from "../../../components/TextField";
+import { TextField } from "../../../components/atoms/TextField";
 import type { LoginFormValues } from "../hooks/useLoginForm";
+import Divider from "@mui/material/Divider";
+import Box from "@mui/material/Box";
 
 interface LoginFormProps {
   form: UseFormReturn<LoginFormValues>;
@@ -11,6 +13,8 @@ interface LoginFormProps {
   isSubmitting?: boolean;
   error?: string | null;
   idpAlias?: string | null;
+  ssoEnabled?: boolean;
+  onSsoLogin?: () => void;
 }
 
 export function LoginForm({
@@ -18,7 +22,8 @@ export function LoginForm({
   onSubmit,
   isSubmitting = false,
   error,
-  idpAlias,
+  ssoEnabled = false,
+  onSsoLogin,
 }: LoginFormProps) {
   return (
     <FormProvider {...form}>
@@ -71,13 +76,18 @@ export function LoginForm({
           Sign In
         </button>
 
-        <div className="login-form__divider">OR</div>
+        {/* <div className="login-form__divider">OR</div> */}
 
-        <div className="login-form__socials">
-          <SocialLoginButton provider="google" disabled />
-          <SocialLoginButton provider="apple" disabled />
-          <SocialLoginButton provider="microsoft" idpAlias={idpAlias} />
-        </div>
+        {ssoEnabled && (
+          <>
+            <Divider className="my-6">or</Divider>
+            <Box className="grid grid-cols-3 gap-3">
+              <SocialLoginButton provider="google" disabled />
+              <SocialLoginButton provider="apple" disabled />
+              <SocialLoginButton provider="microsoft" onClick={onSsoLogin} />
+            </Box>
+          </>
+        )}
 
         <p className="login-panel__terms">
           By signing up to create an account I accept Company's{" "}

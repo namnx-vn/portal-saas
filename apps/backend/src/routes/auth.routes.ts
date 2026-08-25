@@ -13,7 +13,7 @@ import {
   verifyPreAuthToken,
 } from "../lib/session.js";
 import { toSafeUser } from "../lib/user.js";
-import { getPermissionsForRole } from "../lib/permissions.js";
+import { resolvePermissions } from "../lib/permissions.js";
 import {
   loginRateLimiter,
   mfaRateLimiter,
@@ -83,7 +83,7 @@ router.post("/auth/invite/accept", async (req, res) => {
   res.json({
     user: toSafeUser(updated),
     role: updated.role,
-    permissions: getPermissionsForRole(updated.role),
+    permissions: resolvePermissions(updated),
   });
 });
 
@@ -180,7 +180,7 @@ router.post("/auth/login", loginRateLimiter, async (req, res) => {
     return res.json({
       user: toSafeUser(user),
       role: user.role,
-      permissions: getPermissionsForRole(user.role),
+      permissions: resolvePermissions(user),
     });
   }
 
@@ -258,8 +258,13 @@ router.post("/auth/mfa/verify", mfaRateLimiter, async (req, res) => {
   res.json({
     user: toSafeUser(updated),
     role: updated.role,
-    permissions: getPermissionsForRole(updated.role),
+    permissions: resolvePermissions(updated),
   });
+});
+
+router.post("/logout", (_req, res) => {
+  res.clearCookie("portal_session");
+  res.json({ ok: true });
 });
 
 export default router;

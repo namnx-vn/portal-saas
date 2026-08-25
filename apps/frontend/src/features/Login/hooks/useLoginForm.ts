@@ -2,10 +2,9 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { useApiMutation } from "../../../hooks/useApi";
-import { useUserStore, useUIStore } from "../../../stores";
+import { useUserStore, useUIStore, useAuthStore } from "../../../stores";
 import apiClient from "../../../lib/axios";
-
-const TENANT_SUBDOMAIN = "acme"; // demo — khớp cách hardcode hiện có ở useAuthRedirectHandler.ts
+import { TENANT_SUBDOMAIN } from "../../../config/tenant";
 
 export interface LoginFormValues {
   email: string;
@@ -35,19 +34,28 @@ export function useLoginForm() {
 
   const setUser = useUserStore((state) => state.setUser);
   const { showNotification } = useUIStore();
+  const { setAuthenticated } = useAuthStore();
 
-  const [mfaStage, setMfaStage] = useState<{ preAuthToken: string } | null>(null);
+  const [mfaStage, setMfaStage] = useState<{ preAuthToken: string } | null>(
+    null,
+  );
 
   const applySession = (data: LoginApiResponse) => {
     setUser({ ...data.user, role: data.role, permissions: data.permissions });
     showNotification("Đăng nhập thành công!", "success");
     form.reset();
     setMfaStage(null);
+    setAuthenticated(true);
   };
 
-  const loginMutation = useApiMutation<LoginApiResponse | MfaRequiredResponse, LoginFormValues>({
+  const loginMutation = useApiMutation<
+    LoginApiResponse | MfaRequiredResponse,
+    LoginFormValues
+  >({
     mutationFn: async (data) => {
-      const response = await apiClient.post<LoginApiResponse | MfaRequiredResponse>(
+      const response = await apiClient.post<
+        LoginApiResponse | MfaRequiredResponse
+      >(
         "/auth/login",
         { email: data.email, password: data.password },
         { headers: { "x-tenant-subdomain": TENANT_SUBDOMAIN } },
@@ -62,35 +70,58 @@ export function useLoginForm() {
       applySession(data);
     },
     onError: (error: any) => {
-      showNotification(error?.response?.data?.error || "Đăng nhập thất bại. Vui lòng thử lại.", "error");
+      showNotification(
+        error?.response?.data?.error || "Đăng nhập thất bại. Vui lòng thử lại.",
+        "error",
+      );
     },
   });
 
   const verifyOtpMutation = useApiMutation<LoginApiResponse, { otp: string }>({
     mutationFn: async ({ otp }) => {
       if (!mfaStage) throw new Error("Missing MFA session");
-      const response = await apiClient.post<LoginApiResponse>("/auth/mfa/verify", {
-        preAuthToken: mfaStage.preAuthToken,
-        otp,
-      });
+      const response = await apiClient.post<LoginApiResponse>(
+        "/auth/mfa/verify",
+        {
+          preAuthToken: mfaStage.preAuthToken,
+          otp,
+        },
+      );
       return response.data;
     },
     onSuccess: applySession,
     onError: (error: any) => {
-      showNotification(error?.response?.data?.error || "Xác thực OTP thất bại.", "error");
+      showNotification(
+        error?.response?.data?.error || "Xác thực OTP thất bại.",
+        "error",
+      );
     },
   });
 
   const passwordRules = useMemo(
     () => [
-      { id: "strength", label: "Password Strength : Weak", met: password.length >= 12 },
+      {
+        id: "strength",
+        label: "Password Strength : Weak",
+        met: password.length >= 12,
+      },
       {
         id: "identity",
         label: "Cannot contain your name or email address",
-        met: !email || !password.toLowerCase().includes(email.split("@")[0].toLowerCase()),
+        met:
+          !email ||
+          !password.toLowerCase().includes(email.split("@")[0].toLowerCase()),
       },
-      { id: "length", label: "At least 8 characters", met: password.length >= 8 },
-      { id: "complexity", label: "Contains a number or symbol", met: /[\d\W_]/.test(password) },
+      {
+        id: "length",
+        label: "At least 8 characters",
+        met: password.length >= 8,
+      },
+      {
+        id: "complexity",
+        label: "Contains a number or symbol",
+        met: /[\d\W_]/.test(password),
+      },
     ],
     [email, password],
   );
@@ -103,5 +134,13 @@ export function useLoginForm() {
     verifyOtpMutation.mutate({ otp });
   };
 
-  return { form, passwordRules, loginMutation, verifyOtpMutation, mfaStage, onSubmit, onVerifyOtp };
+  return {
+    form,
+    passwordRules,
+    loginMutation,
+    verifyOtpMutation,
+    mfaStage,
+    onSubmit,
+    onVerifyOtp,
+  };
 }

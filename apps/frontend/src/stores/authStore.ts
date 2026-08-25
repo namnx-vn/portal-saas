@@ -9,6 +9,7 @@ interface AuthState {
   setAuth: (token: string, refreshToken: string, expiresIn: number) => void;
   clearAuth: () => void;
   setToken: (token: string) => void;
+  setAuthenticated: (isAuthenticated: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -37,6 +38,8 @@ export const useAuthStore = create<AuthState>()(
           }),
 
         setToken: (token: string) => set({ token }),
+
+        setAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
       }),
       {
         name: "auth-storage", // localStorage key

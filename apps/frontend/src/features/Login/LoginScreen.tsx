@@ -1,14 +1,16 @@
 import { Box, CircularProgress, Container, Paper } from "@mui/material";
 import { useTenantConfig } from "../../hooks/useTenantConfig";
-import { useUserStore } from "../../stores";
 import { BrandMark } from "./components/BrandMark";
 import { LoginForm } from "./components/LoginForm";
 import { LoginHero } from "./components/LoginHero";
 import { MfaOtpForm } from "./components/MfaOtpForm";
 import { useLoginForm } from "./hooks/useLoginForm";
 import "./LoginScreen.scss";
-
-const TENANT_SUBDOMAIN = "native";
+import { useSsoLogin } from "../../hooks/useSsoLogin";
+import { TENANT_SUBDOMAIN } from "../../config/tenant";
+import { Navigate } from "react-router-dom";
+import { useAuthStore } from "../../stores";
+import { useEffect } from "react";
 
 export function LoginScreen() {
   const { config, loading: configLoading } = useTenantConfig(TENANT_SUBDOMAIN);
@@ -20,14 +22,11 @@ export function LoginScreen() {
     onSubmit,
     onVerifyOtp,
   } = useLoginForm();
-  const user = useUserStore((state) => state.user);
+  const loginWithSso = useSsoLogin();
+  const { isAuthenticated } = useAuthStore();
 
-  if (user) {
-    return (
-      <Box className="flex items-center justify-center min-h-screen">
-        <p>Đã đăng nhập với vai trò {user.role}.</p>
-      </Box>
-    );
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
@@ -64,9 +63,10 @@ export function LoginScreen() {
             {!configLoading && !mfaStage && (
               <LoginForm
                 form={form}
-                idpAlias={config?.idp_alias}
                 onSubmit={onSubmit}
                 isSubmitting={loginMutation.isPending}
+                ssoEnabled={config?.sso_enabled ?? false}
+                onSsoLogin={() => loginWithSso(config?.idp_alias)}
                 error={
                   loginMutation.isError
                     ? "Email hoặc mật khẩu không đúng."

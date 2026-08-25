@@ -29,12 +29,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    const isSessionCheck = error.config?.url === "/me";
+    // const isSessionCheck = error.config?.url === "/me";
 
-    if (error.response?.status === 401 && !isSessionCheck) {
-      useUserStore.getState().clearUser();
-      window.location.href = "/";
-    }
+    // if (error.response?.status === 401 && !isSessionCheck) {
+    //   useUserStore.getState().clearUser();
+    //   window.location.href = "/";
+    // }
     return Promise.reject(error);
   },
 );
