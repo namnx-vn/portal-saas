@@ -18,17 +18,16 @@ interface User {
  */
 export function UserDashboard() {
   // Zustand: Get auth and UI state
-  const { isAuthenticated, token, clearAuth } = useAuthStore();
+  const { isAuthenticated, clearAuth } = useAuthStore();
   const { user: localUser, setUser, setError } = useUserStore();
   const { showNotification } = useUIStore();
 
   // React Query: Fetch user data
-  const { data: apiUser, isLoading, error } = useApiQuery<User>(
-    "/api/users/me",
-    {
-      enabled: isAuthenticated && !!token, // Only fetch if authenticated
-    }
-  );
+  const {
+    data: apiUser,
+    isLoading,
+    error,
+  } = useApiQuery<User>("/api/users/me");
 
   useEffect(() => {
     if (!apiUser) return;

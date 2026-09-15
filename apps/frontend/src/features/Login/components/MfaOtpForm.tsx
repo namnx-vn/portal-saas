@@ -29,7 +29,7 @@ export function MfaOtpForm({ onSubmit, isSubmitting = false, error }: MfaOtpForm
         onChange={(e) => setOtp(e.target.value)}
         fullWidth
         disabled={isSubmitting}
-        inputProps={{ maxLength: 6, inputMode: "numeric" }}
+        slotProps={{ htmlInput: { maxLength: 6, inputMode: "numeric" } }}
         autoFocus
       />
 

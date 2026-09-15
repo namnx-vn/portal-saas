@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 0",
+    "test:cors": "node --import tsx --test src/lib/cors.test.ts",
     "dev": "tsx watch src/index.ts",
     "db:seed": "tsx prisma/seed.ts",
     "test:jit": "tsx src/scripts/test-jit.ts",

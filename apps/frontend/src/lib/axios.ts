@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { AxiosInstance, AxiosError } from "axios";
-import { useAuthStore, useUserStore } from "../stores";
+import { useAuthStore } from "../stores";
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:4000",

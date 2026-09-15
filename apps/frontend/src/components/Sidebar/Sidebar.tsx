@@ -4,7 +4,7 @@ import ChevronLeftRounded from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRounded from "@mui/icons-material/ChevronRightRounded";
 import SettingsOutlined from "@mui/icons-material/SettingsOutlined";
 import LogoutRounded from "@mui/icons-material/LogoutRounded";
-import { SidebarNavItem } from "./SidebarNavItem";
+import { SidebarNavItem } from "./Sidebarnavitem";
 import type { NavSection, SidebarUser } from "./types";
 import "./Sidebar.scss";
 

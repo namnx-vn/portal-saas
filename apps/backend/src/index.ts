@@ -13,14 +13,12 @@ import tenantConfigRouter from "./routes/tenant-config.routes";
 import adminUsersRouter from "./routes/admin-users.routes";
 import authRouter from "./routes/auth.routes";
 import adminRolesRouter from "./routes/admin-roles.routes";
+import { createCorsOptions } from "./lib/cors.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
-  credentials: true,
-}));
+app.use(cors(createCorsOptions()));
 app.use(express.json());
 app.use(cookieParser());
 

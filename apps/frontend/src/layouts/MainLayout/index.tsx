@@ -49,7 +49,7 @@ export function MainLayout() {
         sections={sidebarSections}
         activeId={findActiveId(location.pathname)}
         onSelect={handleSelect}
-        user={user ? { name: user.name, role: user.role || "Member" } : undefined}
+        user={user ? { name: user.email, role: user.role || "Member" } : undefined}
         onLogout={handleLogout}
       />
       <main className="app-layout__content">

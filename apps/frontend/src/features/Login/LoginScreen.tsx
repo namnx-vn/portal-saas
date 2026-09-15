@@ -10,7 +10,6 @@ import { useSsoLogin } from "../../hooks/useSsoLogin";
 import { TENANT_SUBDOMAIN } from "../../config/tenant";
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../../stores";
-import { useEffect } from "react";
 
 export function LoginScreen() {
   const { config, loading: configLoading } = useTenantConfig(TENANT_SUBDOMAIN);

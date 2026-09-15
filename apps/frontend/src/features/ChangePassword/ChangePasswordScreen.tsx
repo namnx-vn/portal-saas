@@ -1,4 +1,4 @@
-import { Navigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import {
   Box,
   Container,
@@ -10,7 +10,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useChangePasswordForm } from "./hooks/useChangePasswordForm";
-import { useUserStore } from "../../stores";
 
 export function ChangePasswordScreen() {
   const [searchParams] = useSearchParams();
@@ -24,7 +23,6 @@ export function ChangePasswordScreen() {
     onSubmit,
     onResend,
   } = useChangePasswordForm(token);
-  const user = useUserStore((state) => state.user);
 
   if (!token) {
     return (
@@ -75,8 +73,11 @@ export function ChangePasswordScreen() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {acceptMutation.isError && (
                 <Alert severity="error">
-                  {(acceptMutation.error as any)?.response?.data?.error ||
-                    "Có lỗi xảy ra."}
+                  {(
+                    acceptMutation.error as {
+                      response?: { data?: { error?: string } };
+                    }
+                  )?.response?.data?.error || "Có lỗi xảy ra."}
                 </Alert>
               )}
 

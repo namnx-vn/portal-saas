@@ -1,6 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useAuthRedirectHandler } from "./hooks/useAuthRedirectHandler";
-import { useTenantConfig } from "./hooks/useTenantConfig";
 import { LoginScreen } from "./features/Login";
 import { MainLayout } from "./layouts";
 import { RequireAuth } from "./components/RequireAuth";
@@ -13,7 +12,6 @@ import { ChangePasswordScreen } from "./features/ChangePassword/ChangePasswordSc
 
 function App() {
   useAuthRedirectHandler();
-  useTenantConfig("acme");
 
   return (
     <BrowserRouter>
