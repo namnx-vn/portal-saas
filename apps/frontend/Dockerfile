@@ -1,7 +1,7 @@
 # ==============================
 # Stage 1: Build frontend
 # ==============================
-FROM node:24-alpine AS build
+FROM node:24-alpine@sha256:<exact-digest> AS build
 
 RUN npm install -g pnpm@10.34.5
 
@@ -28,7 +28,7 @@ RUN pnpm --filter frontend build
 # ==============================
 # Stage 2: Runtime
 # ==============================
-FROM nginx:alpine AS runtime
+FROM nginx:alpine@sha256:<exact-digest> AS runtime
 
 ARG GIT_COMMIT
 
