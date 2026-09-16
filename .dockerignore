@@ -1,0 +1,14 @@
+.git
+.gitignore
+.DS_Store
+
+**/node_modules
+**/dist
+
+**/.env
+**/.env.*
+
+cookies.txt
+
+npm-debug.log*
+pnpm-debug.log*
