@@ -1,4 +1,5 @@
 import type { Configuration } from "@azure/msal-browser";
+import type { RuntimeConfig } from "./config/runtimeConfig";
 
 export const msalConfig: Configuration = {
   auth: {
@@ -10,6 +11,24 @@ export const msalConfig: Configuration = {
     cacheLocation: "sessionStorage", // KHÔNG dùng localStorage cho token
   },
 };
+
+export function createMsalConfig(config: RuntimeConfig): Configuration {
+  return {
+    auth: {
+      clientId: config.entra.clientId,
+
+      authority:
+        `https://${config.entra.tenantName}.ciamlogin.com/` +
+        config.entra.tenantId,
+
+      redirectUri: config.entra.redirectUri,
+    },
+
+    cache: {
+      cacheLocation: "sessionStorage",
+    },
+  };
+}
 
 export const loginRequest = {
   scopes: ["openid", "profile", "email"],

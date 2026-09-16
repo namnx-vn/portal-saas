@@ -1,0 +1,11 @@
+{
+  "environment": "local",
+  "apiBaseUrl": "/api",
+  "baseUrl": "http://localhost:4000",
+  "entra": {
+    "clientId": "8c0ffb5e-a0ba-4edb-9049-e8500571be43",
+    "tenantName": "namng",
+    "tenantId": "d8c4370f-5fc1-41ca-a13c-976cf53f4f73",
+    "redirectUri": "http://localhost:8080"
+  }
+}
