@@ -10,3 +10,15 @@
   padding: 32px;
   overflow-y: auto;
 }
+
+@media (max-width: 720px) {
+  .app-layout__content {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .app-layout__content {
+    padding: 12px;
+  }
+}

@@ -17,6 +17,7 @@ model Tenant {
   users           User[]
   departments     Department[]
   departmentRoles DepartmentRole[]
+  personalDailyMetrics PersonalDailyMetric[]
 
   @@map("tenants")
 }
@@ -53,6 +54,7 @@ model User {
   tenant         Tenant          @relation(fields: [tenantId], references: [id])
   auditLogs      LoginAuditLog[]
   departmentRole DepartmentRole? @relation(fields: [departmentRoleId], references: [id])
+  personalDailyMetrics PersonalDailyMetric[]
 
   @@unique([tenantId, externalObjectId])
   @@unique([tenantId, email]) // lookup native login + siết BR-05
@@ -70,6 +72,29 @@ model LoginAuditLog {
   user User @relation(fields: [userId], references: [id])
 
   @@map("login_audit_log")
+}
+
+model PersonalDailyMetric {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  tenantId         String   @map("tenant_id")
+  recordedOn       DateTime @db.Date @map("recorded_on")
+  focusMinutes     Int      @default(0) @map("focus_minutes")
+  meetingMinutes   Int      @default(0) @map("meeting_minutes")
+  learningMinutes  Int      @default(0) @map("learning_minutes")
+  personalMinutes  Int      @default(0) @map("personal_minutes")
+  tasksPlanned     Int      @default(0) @map("tasks_planned")
+  tasksCompleted   Int      @default(0) @map("tasks_completed")
+  learningSessions Int      @default(0) @map("learning_sessions")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([userId, recordedOn])
+  @@index([tenantId, userId, recordedOn])
+  @@map("personal_daily_metrics")
 }
 
 model Department {

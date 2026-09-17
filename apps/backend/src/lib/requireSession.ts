@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
-import { verifyPortalSession } from "./session";
-import type { PortalSessionPayload } from "./session";
+import { verifyPortalSession } from "./session.js";
+import type { PortalSessionPayload } from "./session.js";
 
 declare global {
   namespace Express {

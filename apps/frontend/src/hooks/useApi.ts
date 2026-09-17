@@ -8,7 +8,7 @@ import apiClient from "../lib/axios";
  */
 export function useApiQuery<T>(
   url: string,
-  options?: UseQueryOptions<T, AxiosError>
+  options?: Omit<UseQueryOptions<T, AxiosError>, "queryKey" | "queryFn">
 ) {
   return useQuery<T, AxiosError>({
     queryKey: [url],

@@ -13,6 +13,7 @@ import tenantConfigRouter from "./routes/tenant-config.routes";
 import adminUsersRouter from "./routes/admin-users.routes";
 import authRouter from "./routes/auth.routes";
 import adminRolesRouter from "./routes/admin-roles.routes";
+import personalDashboardRouter from "./routes/personal-dashboard.routes.js";
 import { createCorsOptions } from "./lib/cors.js";
 
 const app = express();
@@ -28,6 +29,7 @@ app.use(tenantConfigRouter);
 app.use(adminUsersRouter);
 app.use(authRouter);
 app.use(adminRolesRouter);
+app.use(personalDashboardRouter);
 
 app.post("/session/callback", async (req, res) => {
   const { idToken } = req.body;
