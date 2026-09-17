@@ -1,4 +1,7 @@
+let runtimeConfig: RuntimeConfig | null = null;
+
 export type RuntimeConfig = {
+  schemaVersion: number;
   environment: string;
   apiBaseUrl: string;
   entra: {
@@ -9,33 +12,47 @@ export type RuntimeConfig = {
   };
 };
 
-let runtimeConfig: RuntimeConfig | null = null;
+function assertNonEmpty(value: unknown, name: string): asserts value is string {
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`Invalid runtime config: ${name}`);
+  }
+}
 
-export async function loadRuntimeConfig(): Promise<RuntimeConfig> {
+function validateRuntimeConfig(config: RuntimeConfig): RuntimeConfig {
+  if (config.schemaVersion !== 1) {
+    throw new Error(
+      `Unsupported runtime config schema: ${config.schemaVersion}`,
+    );
+  }
+
+  assertNonEmpty(config.environment, "environment");
+  assertNonEmpty(config.apiBaseUrl, "apiBaseUrl");
+
+  assertNonEmpty(config.entra?.clientId, "entra.clientId");
+
+  assertNonEmpty(config.entra?.tenantName, "entra.tenantName");
+
+  assertNonEmpty(config.entra?.tenantId, "entra.tenantId");
+
+  assertNonEmpty(config.entra?.redirectUri, "entra.redirectUri");
+
+  return config;
+}
+
+export async function loadRuntimeConfig() {
   const response = await fetch("/runtime-config.json", {
     cache: "no-store",
   });
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to load runtime config: ${response.status}`,
-    );
+    throw new Error(`Failed to load runtime config: HTTP ${response.status}`);
   }
 
-  const config = (await response.json()) as RuntimeConfig;
+  const raw = await response.json();
 
-  if (
-    !config.entra?.clientId ||
-    !config.entra?.tenantName ||
-    !config.entra?.tenantId ||
-    !config.entra?.redirectUri
-  ) {
-    throw new Error("Invalid runtime config");
-  }
+  runtimeConfig = validateRuntimeConfig(raw);
 
-  runtimeConfig = config;
-
-  return config;
+  return runtimeConfig;
 }
 
 export function getRuntimeConfig(): RuntimeConfig {
