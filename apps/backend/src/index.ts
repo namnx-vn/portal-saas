@@ -83,5 +83,19 @@ app.get("/me", requireSession, async (req, res) => {
     permissions: resolvePermissions(user),
   });
 });
+const server = app.listen(PORT, () => {
+  console.log(`Backend running on port ${PORT}`);
+});
 
-app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, shutting down...");
+
+  server.close(async () => {
+    console.log("HTTP server closed");
+
+    await prisma.$disconnect();
+    console.log("Database disconnected");
+
+    process.exit(0);
+  });
+});
