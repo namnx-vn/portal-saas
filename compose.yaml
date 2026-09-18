@@ -13,6 +13,8 @@ services:
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
+    
+    restart: unless-stopped
 
     expose:
       - "4000"
